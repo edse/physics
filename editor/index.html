@@ -1,0 +1,348 @@
+<!doctype html>
+<!--[if lt IE 7]> <html class="no-js lt-ie9 lt-ie8 lt-ie7" lang="en"> <![endif]-->
+<!--[if IE 7]>    <html class="no-js lt-ie9 lt-ie8" lang="en"> <![endif]-->
+<!--[if IE 8]>    <html class="no-js lt-ie9" lang="en"> <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en"> <!--<![endif]-->
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+
+	<title></title>
+	<meta name="description" content="">
+	<meta name="author" content="">
+
+	<meta name="viewport" content="width=device-width">
+
+	<link rel="stylesheet" href="css/bootstrap.min.css">
+	<style>
+	body {
+	  /*padding-top: 60px;
+	  padding-bottom: 40px;*/
+	}
+	</style>
+	<link rel="stylesheet" href="css/bootstrap-responsive.min.css">
+	<link rel="stylesheet" href="css/style.css">
+
+	<script src="js/libs/modernizr-2.5.3-respond-1.1.0.min.js"></script>
+</head>
+<body>
+<!--[if lt IE 7]><p class=chromeframe>Your browser is <em>ancient!</em> <a href="http://browsehappy.com/">Upgrade to a different browser</a> or <a href="http://www.google.com/chromeframe/?redirect=true">install Google Chrome Frame</a> to experience this site.</p><![endif]-->
+
+
+		<div class="navbar navbar-fixed-top">
+		  <div class="navbar-inner">
+		    <div class="container-fluid">
+		      <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+		        <span class="icon-bar"></span>
+		        <span class="icon-bar"></span>
+		        <span class="icon-bar"></span>
+		      </a>
+		      <a class="brand" href="#">Project name</a>
+		      <div class="btn-group pull-right">
+            <div id="vertices-input" class="input-prepend pull-left" style="margin-right: 5px; display: none;">
+              <span class="add-on">vertices</span><input id="vertices" class="span1" size="5" type="text" value="3" />
+            </div>
+            <div id="number-input" class="input-prepend pull-left" style="margin-right: 5px; display: none;">
+              <span class="add-on">bodies</span><input id="bodies" class="span1" size="5" type="text" value="1" />
+            </div>
+            <a id="create-btn" class="btn" href="javascript: tool.createIrregularShape();" style="display: none;">Create body</a>
+            <!-- <a id="stop-btn" class="btn btn-danger" href="javascript: tool.creationStop();" style="display: none;">Stop</a> -->
+						<a id="selected_tool" class="btn disabled" href="#">Navigate</a>
+            <a class="btn btn-primary dropdown-toggle" data-toggle="dropdown" href="#">
+              <i class="icon-briefcase icon-white"></i> Tools
+              <span class="caret"></span>
+            </a>
+            <ul class="dropdown-menu">
+              <li class="nav-header" style="padding-left: 5px;">World...</li>
+              <li><a href="javascript: tool.worldSettings();"><i class="icon-cog"></i> Settings</a></li>
+              <li><a href="javascript: tool.worldSave();"><i class="icon-folder-close"></i> Save</a></li>
+              <li><a href="javascript: tool.worldLoad();"><i class="icon-folder-open"></i> Load</a></li>
+              <li class="divider"></li>
+              <li class="nav-header" style="padding-left: 5px;">Create...</li>
+              <li><a href="javascript: tool.createRect();"><i class="icon-check"></i> Rectangle</a></li>
+              <li><a href="javascript: tool.createCirc();"><i class="icon-ok-circle"></i> Circle</a></li>
+              <li><a href="javascript: tool.createPolygon();"><i class="icon-chevron-down"></i> Polygon</a></li>
+              <li><a href="javascript: tool.createShape();"><i class="icon-chevron-down"></i> Shape</a></li>
+              <li class="divider"></li>
+              <li class="nav-header" style="padding-left: 5px;">Edit...</li>
+              <li><a href="javascript: tool.selectBody();"><i class="icon-pencil"></i> Body Edit</a></li>
+              <li class="nav-header" style="padding-left: 5px;">Fun...</li>
+              <li><a href="javascript: tool.sliceBody();"><i class="icon-pencil"></i> Body Slicer</a></li>
+              <li class="divider"></li>
+              <li class="nav-header" style="padding-left: 5px;">Test...</li>
+              <li><a href="javascript: tool.worldAwakeAll();"><i class="icon-bell"></i> Awake all objects</a></li>
+              <li><a href="javascript: tool.navigate();"><i class="icon-play-circle"></i> Apply Force</a></li>
+            </ul>
+		      </div>
+
+		      <div class="nav-collapse">
+		        <ul class="nav">
+		          <li class="active"><a href="#">Home</a></li>
+		          <li><a href="#about">About</a></li>
+		          <li><a href="#contact">Contact</a></li>
+		        </ul>
+		      </div><!--/.nav-collapse -->
+		    </div>
+		  </div>			
+		</div>
+
+  <div id="world-settings" class="alert" style="display:none; background-color: white; border-radius: 15px; position:absolute; top:45px; left:5px; z-index: 2; opacity: 0.97">
+    <button class="close" onclick="$('#world-settings').fadeOut();">×</button>
+    <h4>Settings</h4>
+    <div class="span4" style="padding-top: 10px; margin:0;">
+      <form class="form-horizontal">
+        <fieldset>
+          <div class="control-group">
+            <label class="control-label" for="ins_name">Name</label>
+            <div class="controls">
+              <input type="text" class="input-medium" id="ins_name" />
+            </div>
+          </div>
+          <div class="control-group">
+            <label class="control-label">Gravity</label>
+            <div class="controls">
+              <input type="text" class="input-small" id="set_gravity_x" value="0.0" />
+              <input type="text" class="input-small" id="set_gravity_y" value="0.0" />
+            </div>
+          </div>
+          <div class="control-group">
+            <label class="control-label">Render</label>
+            <div class="controls">
+              <label class="radio">
+                <input type="radio" name="render" id="render1" value="1" />
+                Box2d debug only
+              </label>
+              <label class="radio">
+                <input type="radio" name="render" id="render2" value="2" />
+                Sprites only
+              </label>
+              <label class="radio">
+                <input type="radio" name="render" id="render3" value="3" checked="checked" />
+                Box2d debug only and Sprites
+              </label>
+            </div>
+          </div>
+          <hr />
+          <a class="btn btn-success" href="javascript: tool.worldSaveSettings();"><i class="icon-ok icon-white"></i> Save changes</a>
+          <a class="btn btn-warning" href="javascript: tool.unselect();"><i class="icon-remove icon-white"></i> Cancel</a>
+        </fieldset>
+      </form>
+    </div>
+  </div>
+
+  <div id="world-load" class="alert" style="display:none; background-color: white; border-radius: 15px; position:absolute; top:45px; left:5px; z-index: 2; opacity: 0.97">
+    <button class="close" onclick="$('#world-load').fadeOut();">×</button>
+    <h4>Load</h4>
+    <div class="span4" style="padding-top: 10px; margin:0;">
+      <form class="form-horizontal">
+        <fieldset>
+          <div class="control-group">
+            <label class="control-label" for="loa_name">Select a world</label>
+            <div class="controls">
+              <select id="loa_name">
+                <option>1</option>
+                <option>2</option>
+                <option>3</option>
+                <option>4</option>
+                <option>5</option>
+              </select>
+            </div>
+          </div>
+          <hr />
+          <a class="btn btn-success" href="javascript: tool.worldLoad();"><i class="icon-ok icon-white"></i> Load world</a>
+          <a class="btn btn-warning" href="javascript: tool.unselect();"><i class="icon-remove icon-white"></i> Cancel</a>
+        </fieldset>
+      </form>
+    </div>
+  </div>
+  
+  <div id="world-save" class="alert" style="display:none; background-color: white; border-radius: 15px; position:absolute; top:45px; left:5px; z-index: 2; opacity: 0.97">
+    <button class="close" onclick="$('#world-save').fadeOut();">×</button>
+    <h4>Save</h4>
+    <div class="span4" style="padding-top: 10px; margin:0;">
+      <form class="form-horizontal">
+        <fieldset>
+          <div class="control-group">
+            <label class="control-label" for="sav_name">Name this world as</label>
+            <div class="controls">
+              <input type="text" class="input-medium" id="sav_name" >
+            </div>
+          </div>
+          <hr />
+          <a class="btn btn-success" href="javascript: tool.worldSave();"><i class="icon-ok icon-white"></i> Save world</a>
+          <a class="btn btn-warning" href="javascript: tool.unselect();"><i class="icon-remove icon-white"></i> Cancel</a>
+        </fieldset>
+      </form>
+    </div>
+  </div>
+
+  <div id="unselect" class="alert" style="display:block; background-color: white; border-radius: 15px; position:absolute; top:45px; left:5px; z-index: 2; opacity: 0.97">
+    <button class="close" onclick="$('#unselect').fadeOut();">×</button>
+    <h4>Apply Force</h4>
+    <ul>
+      <li>Click or touch any object to select it</li>
+      <li>Click or Touch around to apply a force to this object</li>
+      <li>Use the mouse wheel to zoom in and out</li>
+      <li>To select other object press the unselect button bellow first</li>
+    </ul>
+    <hr />
+    <a class="btn btn-warning" href="javascript: tool.unselect();"><i class="icon-remove icon-white"></i> Unselect</a>
+  </div>
+
+  <div id="inspector" class="alert" style="display:none; background-color: white; border-radius: 15px; position:absolute; top:45px; left:5px; z-index: 2; opacity: 0.97">
+    <button class="close" onclick="$('#inspector').fadeOut();">×</button>
+    <!--
+    <ul>
+      <li>Click or touch any object to select it</li>
+      <li>Use the mouse wheel to zoom in and out</li>
+    </ul>
+    -->
+      <div class="span5" style="padding-top: 10px; margin:0;">
+        <form class="form-horizontal2">
+          <!--
+          <fieldset class="span2">
+            <div class="control-group">
+              <label class="control-label" for="ins_name">Name</label>
+              <div class="controls">
+                <input type="text" class="input-medium disabled" id="ins_name" disabled />
+              </div>
+            </div>
+          </fieldset>
+          -->
+          <fieldset class="span2">
+            <div class="control-group">
+              <label class="control-label">Position</label>
+              <div class="controls">
+                <input type="text" class="disabled input-small" id="ins_x" disabled />
+                <input type="text" class="disabled input-small" id="ins_y" disabled />
+              </div>
+            </div>
+          </fieldset>
+          <!--
+          <fieldset class="span2">
+            <div class="control-group">
+              <label class="control-label" for="ins_type">Type</label>
+              <div class="controls">
+                <input type="text" class="input-medium disabled" id="ins_type" disabled />
+              </div>
+            </div>
+          </fieldset>
+          -->
+          <fieldset class="span2">
+            <div class="control-group">
+              <label class="control-label" for="ins_mass">Mass</label>
+              <div class="controls">
+                <input type="text" class="input-medium disabled" id="ins_mass" disabled />
+              </div>
+            </div>
+          </fieldset>
+          <fieldset class="span2">
+            <div class="control-group">
+              <label class="control-label" for="ins_angularVelocity">AngularVelocity</label>
+              <div class="controls">
+                <input type="text" class="input-medium disabled" id="ins_angularVelocity" disabled />
+              </div>
+            </div>
+          </fieldset>
+          <fieldset class="span2">
+            <div class="control-group">
+              <label class="control-label" for="ins_angularDamping">AngularDamping</label>
+              <div class="controls">
+                <input type="text" class="input-medium disabled" id="ins_angularDamping" disabled />
+              </div>
+            </div>
+          </fieldset>
+          <fieldset class="span2">
+            <div class="control-group">
+              <label class="control-label" for="ins_angularDamping">LinearDamping</label>
+              <div class="controls">
+                <input type="text" class="input-medium disabled" id="ins_linearDamping" disabled />
+              </div>
+            </div>
+          </fieldset>
+          <fieldset class="span2">
+            <div class="control-group">
+              <label class="control-label" for="ins_contactList">ContactList</label>
+              <div class="controls">
+                <input type="text" class="input-medium disabled" id="ins_contactList" disabled />
+              </div>
+            </div>
+          </fieldset>
+          <fieldset class="span2">
+            <div class="control-group">
+              <label class="control-label" for="ins_inertiaScale">InertiaScale</label>
+              <div class="controls">
+                <input type="text" class="input-medium disabled" id="ins_inertiaScale" disabled />
+              </div>
+            </div>
+          </fieldset>
+          <fieldset class="span2">
+            <div class="control-group">
+              <label class="control-label" for="ins_sleepTime">SleepTime</label>
+              <div class="controls">
+                <input type="text" class="input-medium disabled" id="ins_sleepTime" disabled />
+              </div>
+            </div>
+          </fieldset>
+          <fieldset class="span2">
+            <div class="control-group">
+              <label class="control-label" for="ins_sleepTime">Body Size</label>
+              <div class="controls">
+                <input type="text" class="input-medium disabled" id="ins_bodysize" disabled />
+              </div>
+            </div>
+          </fieldset>
+          <fieldset class="span2">
+            <div class="control-group">
+              <label class="control-label" for="ins_sleepTime">Image Size</label>
+              <div class="controls">
+                <input type="text" class="input-medium disabled" id="ins_imgsize" disabled />
+              </div>
+            </div>
+          </fieldset>
+          <fieldset class="span2">
+            <div class="control-group">
+              <label class="control-label" for="ins_sleepTime">Image Source</label>
+              <div class="controls">
+                <input type="text" class="input-medium disabled" id="ins_imgsrc" disabled />
+              </div>
+            </div>
+          </fieldset>
+          <fieldset class="span4">
+            <!--
+            <div class="control-group">
+              <label class="control-label" for="ins_fixtureList">FixtureList</label>
+              <div class="controls">
+                <input type="text" class="input-medium disabled" id="ins_fixtureList">
+              </div>
+            </div>
+            <div class="control-group">
+              <label class="control-label" for="ins_userData">UserData</label>
+              <div class="controls">
+                <input type="text" class="input-medium disabled" id="ins_userData">
+              </div>
+            </div>
+            -->
+            <hr />
+            <a class="btn btn-success btn-small" href="javascript: tool.unselect();"><i class="icon-remove icon-white"></i> Unselect</a>
+            <div class="btn-group pull-right" style="margin-bottom: 25px;">
+              <a class="btn btn-primary btn-small" href="javascript: tool.bodyMove();"><i class="icon-move icon-white"></i> Move</a>
+              <a class="btn btn-primary btn-small" href="javascript: tool.bodyDuplicate();"><i class="icon-plus icon-white"></i> Duplicate</a>
+              <a class="btn btn-primary btn-small" href="javascript: tool.bodyEdit();"><i class="icon-wrench icon-white"></i> Edit</a>
+              <a class="btn btn-danger btn-small" href="javascript: tool.bodyDelete();"><i class="icon-remove icon-white"></i> Delete</a>
+            </div>
+          </fieldset>
+        </form>
+      </div>
+    </div>
+    
+		<canvas id="canvas" style="background-color:#333333;z-index: 1;" ></canvas>
+
+		<script src="js/libs/jquery-1.7.2.min.js"></script>
+		<script src="js/libs/bootstrap/bootstrap.min.js"></script>
+		
+		<script type="text/javascript" src="js/libs/Box2dWeb-2.1.a.3.min.js"></script>
+		<script src="js/script.js"></script>
+		
+	</body>
+</html>

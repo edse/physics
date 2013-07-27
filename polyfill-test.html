@@ -1,0 +1,141 @@
+<!doctype html>
+<!--[if lt IE 7]> <html class="no-js lt-ie9 lt-ie8 lt-ie7" lang="en"> <![endif]-->
+<!--[if IE 7]>    <html class="no-js lt-ie9 lt-ie8" lang="en"> <![endif]-->
+<!--[if IE 8]>    <html class="no-js lt-ie9" lang="en"> <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en"> <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+
+  <title></title>
+  <meta name="description" content="">
+  <meta name="author" content="">
+
+  <meta name="viewport" content="width=device-width">
+
+  <link rel="stylesheet" href="editor/css/bootstrap.min.css">
+  <style>
+  body {
+    /*padding-top: 60px;
+    padding-bottom: 40px;*/
+  }
+  </style>
+  <link rel="stylesheet" href="editor/css/bootstrap-responsive.min.css">
+  <link rel="stylesheet" href="editor/css/style.css">
+
+  <script src="editor/js/libs/modernizr-2.5.3-respond-1.1.0.min.js"></script>
+</head>
+<body>
+<!--[if lt IE 7]><p class=chromeframe>Your browser is <em>ancient!</em> <a href="http://browsehappy.com/">Upgrade to a different browser</a> or <a href="http://www.google.com/chromeframe/?redirect=true">install Google Chrome Frame</a> to experience this site.</p><![endif]-->
+
+
+    <div class="navbar navbar-fixed-top">
+      <div class="navbar-inner">
+        <div class="container-fluid">
+          <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </a>
+          <a class="brand" href="#">Project name</a>
+
+          <div class="nav-collapse">
+            <ul class="nav">
+              <li class="active"><a href="#">Home</a></li>
+              <li><a href="#about">About</a></li>
+              <li><a href="#contact">Contact</a></li>
+            </ul>
+          </div><!--/.nav-collapse -->
+        </div>
+      </div>      
+    </div>
+
+    <canvas id="canvas" style="background-color:#333333;z-index: 1;" ></canvas>
+
+    <script src="editor/js/libs/jquery-1.7.2.min.js"></script>
+    <script src="editor/js/libs/bootstrap/bootstrap.min.js"></script>
+    
+    <script type="text/javascript" src="editor/js/libs/Box2dWeb-2.1.a.3.min.js"></script>
+    <script>
+
+      // polyfill for animation frame
+      window.requestAnimFrame = (function(){
+        return  window.requestAnimationFrame || 
+          window.webkitRequestAnimationFrame || 
+          window.mozRequestAnimationFrame    || 
+          window.oRequestAnimationFrame      || 
+          window.msRequestAnimationFrame     || 
+          function(/* function */ callback, /* DOMElement */ element){
+            window.setTimeout(callback, 1000 / 60);
+          };
+      })();
+      
+      //poly
+      var entity = [{x: 10, y: 10}, {x: 20, y: 10}, {x: 20, y:20}, {x: 8, y:30}];
+      var vecs = [];
+      for (var i = 0; i < entity.length; i++) {
+        var vec = {x: entity[i].x*10, y: entity[i].y*10};
+        vecs[i] = vec;
+      }
+      console.log(vecs);
+
+      var entity2 = [{x: 10, y: 10}, {x: 20, y: 10}, {x: 20, y:20}, {x: 10, y:20}];
+      var vecs2 = [];
+      for (var i = 0; i < entity2.length; i++) {
+        var vec = {x: entity2[i].x*10+300, y: entity2[i].y*10};
+        vecs2[i] = vec;
+      }
+      console.log(vecs2);
+      
+      var scale = 1;      
+      var canvas = document.getElementById("canvas");
+      var ctx = canvas.getContext("2d");
+      
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+
+      // create new image object to use as pattern
+      var img = new Image();
+      //img.src = 'editor/img/ball.png';
+      img.src = 'images/metal_7280826.jpg';
+      img.onload = function(){
+
+        // create pattern
+        var ptrn = ctx.createPattern(img,'no-repeat');
+        ctx.fillStyle = ptrn;
+        
+        //drawing
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.save();
+
+        ctx.beginPath();
+        ctx.moveTo(vecs[0].x*scale, vecs[0].y*scale);
+        for (var j = 0; j < vecs.length; j++) {
+          if(j<vecs.length-1)
+            ctx.lineTo(vecs[j].x*scale, vecs[j].y*scale, vecs[j+1].x*scale, vecs[j+1].y*scale);
+          else
+            ctx.lineTo(vecs[j].x*scale, vecs[j].y*scale, vecs[0].x*scale, vecs[0].y*scale);
+        }
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(vecs2[0].x*scale, vecs[0].y*scale);
+        for (var j = 0; j < vecs2.length; j++) {
+          if(j<vecs2.length-1)
+            ctx.lineTo(vecs2[j].x*scale, vecs2[j].y*scale, vecs2[j+1].x*scale, vecs2[j+1].y*scale);
+          else
+            ctx.lineTo(vecs2[j].x*scale, vecs2[j].y*scale, vecs2[0].x*scale, vecs2[0].y*scale);
+        }
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.restore();
+
+      }
+    </script>
+    
+  </body>
+</html>
