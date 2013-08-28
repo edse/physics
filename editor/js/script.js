@@ -113,8 +113,8 @@ Tool.prototype.init = function() {
   this.bodyDef.type = b2Body.b2_dynamicBody;
   var rad = 1;
   var data = { 
-    imgsrc: "/editor/img/09.png",
-    imgsize: 277,
+    imgsrc: "/editor/img/ball.png",
+    imgsize: 80,
     bodysize: rad + 0.1
   }
   for (var i = 0; i < 41; ++i) {
@@ -197,7 +197,7 @@ Tool.prototype.init = function() {
   this.ball;
   this.mouseJoint;
   this.selected_tool=0;
-  
+
   this.canvasPosition = this.getElementPosition(this.canvas);
 
   this.canvas.onselectstart = function() {
@@ -498,7 +498,6 @@ Tool.prototype.update = function() {
       else{
         this.building.x2 = this.mouseX;
         this.building.y2 = this.mouseY;
-
       }
       if(this.building.built){
         //this.building=null;
@@ -513,9 +512,6 @@ Tool.prototype.update = function() {
           //this.entryPoint=Array();
           //this.exitPoint=null;
           //this.affectedBody = null;
-          
-          //this.world.RayCast(slice1, new b2Vec2(this.building.x1, this.building.y1), new b2Vec2(this.building.x2, this.building.y2));
-          //this.world.RayCast(slice2, new b2Vec2(this.building.x2, this.building.y2), new b2Vec2(this.building.x1, this.building.y1));
 
           //laserFired
           this.world.RayCast(laserFired, new b2Vec2(this.building.x1, this.building.y1), new b2Vec2(this.building.x2, this.building.y2));
@@ -527,6 +523,8 @@ Tool.prototype.update = function() {
           //this.entryPoint=Array();
           //this.affectedBody = null;
         }
+      }else{
+        this.building=null;
       }
     }
   }
@@ -622,8 +620,13 @@ Tool.prototype.update = function() {
           }
 
           // Translate to the center of the object, then flip and scale appropriately
-          var s2 = -1*(size/2);
-          var scale = b.m_userData.bodysize/-s2;
+          if(b.m_userData){
+            var s2 = -1*(size/2);
+            var scale = b.m_userData.bodysize/-s2;
+          }else{
+            var s2 = 1;
+            var scale = 1;
+          }
           if((b.m_userData != null)&&(b.m_userData.imgsrc && b.m_userData.imgsize))
             this.ctx.translate(-b.m_userData.bodysize*this.scale, -b.m_userData.bodysize*this.scale);
           this.ctx.scale(scale*this.scale,scale*this.scale);
@@ -885,14 +888,14 @@ Tool.prototype.getBodyAtMouse = function() {
 }
 
 Tool.prototype.getBodyCB = function(fixture) {
-  if (fixture.GetBody().GetType() != b2Body.b2_staticBody) {
+  //if (fixture.GetBody().GetType() != b2Body.b2_staticBody) {
     if (fixture.GetShape().TestPoint(fixture.GetBody().GetTransform(), mousePVec)) {
       console.log('body')
       body = fixture.GetBody();
       return false;
     }else
       console.log('!body')
-  }
+  //}
   console.log('nada')
   return true;
 }
@@ -1149,14 +1152,11 @@ Tool.prototype.creationStop = function() {
 
 Tool.prototype.sliceBody = function() {
   this.unselect();
-  if(this.selectedBody)
-    this.unselect();
-
-  this.building=null;
-  this.exitPoint=null;
-  this.entryPoint=Array();
+  this.building = null;
+  this.exitPoint = null;
   this.affectedBody = null;
-
+  this.affectedByLaser = Array();
+  this.entryPoint = Array();
   this.selected_tool = 4;
   $('#selected_tool').html('Trace a line to cut the intersecting bodies');
 }
@@ -1189,70 +1189,15 @@ function slice1(fixture, point, normal, fraction) {
   return 1;
 }
 
-function slice2(fixture, point, normal, fraction) {
-  //console.log('slice1');
-  body = fixture.GetBody();
-  body.polygon = fixture.GetShape();
-  if(window.tool.affectedBody){
-    fixtureIndex = window.tool.affectedBody.indexOf(body);
-    if(fixtureIndex==-1)
-      window.tool.affectedBody.push(body);
-    if(window.tool.exitPoint)
-      window.tool.exitPoint.push(point);
-    else{
-      window.tool.exitPoint = new Array();
-      window.tool.exitPoint.push(point);
-    }
-  }
-  else{
-    window.tool.affectedBody = new Array();
-    window.tool.affectedBody.push(body);
-    if(window.tool.exitPoint)
-      window.tool.exitPoint.push(point);
-    else{
-      window.tool.exitPoint = new Array();
-      window.tool.exitPoint.push(point);
-    }
-  }
-  return 1;
-}
-
-function slice22(fixture, point, normal, fraction) {
-  //console.log('slice2');
-  //body = fixture.GetBody();
-  //if(window.tool.affectedBody){
-    //window.tool.affectedBody.push(body);
-    if(window.tool.exitPoint)
-      window.tool.exitPoint.push(point);
-    else{
-      window.tool.exitPoint = new Array();
-      window.tool.exitPoint.push(point);
-    }
-  //}
-  
-  /*
-  else{
-    window.tool.affectedBody = new Array();
-    window.tool.affectedBody.push(body);
-    if(window.tool.exitPoint)
-      window.tool.exitPoint.push(point);
-    else{
-      window.tool.exitPoint = new Array();
-      window.tool.exitPoint.push(point);
-    }
-  }
-  */
-  return 1;
-}
-
 function laserFired(fixture,point,normal,fraction) {
   var affectedBody=fixture.GetBody();
   affectedBody.polygon = fixture.GetShape();
+  console.log(window.tool.affectedByLaser);
   var fixtureIndex = -1;
   if(window.tool.affectedByLaser){
     fixtureIndex=window.tool.affectedByLaser.indexOf(affectedBody);
   }
-  if (fixtureIndex==-1) {
+  if(fixtureIndex==-1) {
     window.tool.affectedByLaser.push(affectedBody);
     window.tool.entryPoint.push(point);
   }
