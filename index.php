@@ -1,5 +1,5 @@
 <?php
-header("Location: /editor");
+header("Location: /editor?".time());
 die();
 
 /**
