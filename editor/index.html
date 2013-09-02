@@ -137,19 +137,13 @@
       <form class="form-horizontal">
         <fieldset>
           <div class="control-group">
-            <label class="control-label" for="loa_name">Select a world</label>
+            <label class="control-label" for="saved-worlds">Select a world</label>
             <div class="controls">
-              <select id="loa_name">
-                <option>1</option>
-                <option>2</option>
-                <option>3</option>
-                <option>4</option>
-                <option>5</option>
-              </select>
+              <select id="saved-worlds"></select>
             </div>
           </div>
           <hr />
-          <a class="btn btn-success" href="javascript: tool.worldLoad();"><i class="icon-ok icon-white"></i> Load world</a>
+          <a class="btn btn-success" href="javascript: tool.worldLoadFromDisk();"><i class="icon-ok icon-white"></i> Load world</a>
           <a class="btn btn-warning" href="javascript: tool.unselect();"><i class="icon-remove icon-white"></i> Cancel</a>
         </fieldset>
       </form>
@@ -163,13 +157,13 @@
       <form class="form-horizontal">
         <fieldset>
           <div class="control-group">
-            <label class="control-label" for="sav_name">Name this world as</label>
+            <label class="control-label" for="world-name">Name this world as</label>
             <div class="controls">
-              <input type="text" class="input-medium" id="sav_name" >
+              <input type="text" class="input-medium" id="world-name" >
             </div>
           </div>
           <hr />
-          <a class="btn btn-success" href="javascript: tool.worldSave();"><i class="icon-ok icon-white"></i> Save world</a>
+          <a class="btn btn-success" href="javascript: tool.worldSaveToDisk();"><i class="icon-ok icon-white"></i> Save world</a>
           <a class="btn btn-warning" href="javascript: tool.unselect();"><i class="icon-remove icon-white"></i> Cancel</a>
         </fieldset>
       </form>

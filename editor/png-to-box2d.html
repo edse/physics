@@ -1,0 +1,540 @@
+<!doctype html>
+<!--[if lt IE 7]> <html class="no-js lt-ie9 lt-ie8 lt-ie7" lang="en"> <![endif]-->
+<!--[if IE 7]>    <html class="no-js lt-ie9 lt-ie8" lang="en"> <![endif]-->
+<!--[if IE 8]>    <html class="no-js lt-ie9" lang="en"> <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en"> <!--<![endif]-->
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+
+	<title>HTML5 Physics Engine Editor · 2D physics editor that allows you to create, edit, and interact with 2D bodies in real time</title>
+	<meta name="description" content="2D physics editor that allows you to create, edit, and interact with 2D bodies in real time">
+  <meta name="author" content="Emerson Estrella">
+
+	<meta name="viewport" content="width=device-width">
+
+	<link rel="stylesheet" href="css/bootstrap.min.css">
+	<style>
+	body {
+	  /*padding-top: 60px;
+	  padding-bottom: 40px;*/
+	}
+	</style>
+	<link rel="stylesheet" href="css/bootstrap-responsive.min.css">
+	<link rel="stylesheet" href="css/style.css">
+
+	<script src="js/libs/modernizr-2.5.3-respond-1.1.0.min.js"></script>
+</head>
+<body>
+<!--[if lt IE 7]><p class=chromeframe>Your browser is <em>ancient!</em> <a href="http://browsehappy.com/">Upgrade to a different browser</a> or <a href="http://www.google.com/chromeframe/?redirect=true">install Google Chrome Frame</a> to experience this site.</p><![endif]-->
+
+  <div id="world-settings" class="alert" style="display:none; background-color: white; border-radius: 15px; position:absolute; top:45px; left:5px; z-index: 2; opacity: 0.97">
+    <button class="close" onclick="$('#world-settings').fadeOut();">×</button>
+    <h4>Settings</h4>
+    <div class="span4" style="padding-top: 10px; margin:0;">
+      <form class="form-horizontal">
+        <fieldset>
+          <div class="control-group">
+            <label class="control-label" for="ins_name">Name</label>
+            <div class="controls">
+              <input type="text" class="input-medium" id="ins_name" />
+            </div>
+          </div>
+          <div class="control-group">
+            <label class="control-label">Gravity</label>
+            <div class="controls">
+              <input type="text" class="input-small" id="set_gravity_x" value="0.0" />
+              <input type="text" class="input-small" id="set_gravity_y" value="0.0" />
+            </div>
+          </div>
+          <div class="control-group">
+            <label class="control-label">Render</label>
+            <div class="controls">
+              <label class="radio">
+                <input type="radio" name="render" id="render1" value="1" checked="checked" />
+                Box2d debug only
+              </label>
+              <label class="radio">
+                <input type="radio" name="render" id="render2" value="2" />
+                Sprites only
+              </label>
+              <label class="radio">
+                <input type="radio" name="render" id="render3" value="3" />
+                Box2d debug only and Sprites
+              </label>
+            </div>
+          </div>
+          <hr />
+          <a class="btn btn-success" href="javascript: tool.worldSaveSettings();"><i class="icon-ok icon-white"></i> Save changes</a>
+          <a class="btn btn-warning" href="javascript: tool.unselect();"><i class="icon-remove icon-white"></i> Cancel</a>
+        </fieldset>
+      </form>
+    </div>
+  </div>
+
+		<canvas id="canvas" style="background-color:#333333;z-index: 1;" ></canvas>
+
+		<script src="js/libs/jquery-1.7.2.min.js"></script>
+		<script src="js/libs/bootstrap/bootstrap.min.js"></script>
+		
+		<script type="text/javascript" src="js/libs/Box2dWeb-2.1.a.3.min.js"></script>
+		<!--<script src="js/script.js"></script>-->
+		
+		<script>
+      // polyfill for animation frame
+      window.requestAnimFrame = (function(){
+        return  window.requestAnimationFrame || 
+          window.webkitRequestAnimationFrame || 
+          window.mozRequestAnimationFrame    || 
+          window.oRequestAnimationFrame      || 
+          window.msRequestAnimationFrame     || 
+          function(/* function */ callback, /* DOMElement */ element){
+            window.setTimeout(callback, 1000 / 60);
+          };
+      })();
+
+      // constructor
+      function Tool() {
+        this.init();
+        this.update();
+      }
+
+      //init function
+      Tool.prototype.init = function() {
+        b2Vec2 = Box2D.Common.Math.b2Vec2;
+        b2AABB = Box2D.Collision.b2AABB;
+        b2BodyDef = Box2D.Dynamics.b2BodyDef;
+        b2Body = Box2D.Dynamics.b2Body;
+        b2FixtureDef = Box2D.Dynamics.b2FixtureDef;
+        b2Fixture = Box2D.Dynamics.b2Fixture;
+        b2World = Box2D.Dynamics.b2World;
+        b2MassData = Box2D.Collision.Shapes.b2MassData;
+        b2PolygonShape = Box2D.Collision.Shapes.b2PolygonShape;
+        b2CircleShape = Box2D.Collision.Shapes.b2CircleShape;
+        b2DebugDraw = Box2D.Dynamics.b2DebugDraw;
+        b2MouseJointDef = Box2D.Dynamics.Joints.b2MouseJointDef;
+        
+        this.scale = 30;
+        this.center = {x: 0, y:0}
+
+        this.bodies2delete = [];
+        this.building = null;
+        this.built = [];
+
+        this.image = new Image();
+        this.image.src = "/editor/img/ball.png";
+
+        this.canvas = document.getElementById("canvas");
+        this.ctx = this.canvas.getContext("2d");
+
+        this.canvas.width = window.innerWidth;
+        this.canvas.height = window.innerHeight;
+
+        this.world = new b2World(new b2Vec2(0, 0)//gravity
+        , true //allow sleep
+        );
+
+        this.fixDef = new b2FixtureDef;
+        this.fixDef.density = 1;
+        this.fixDef.friction = 0.5;
+        this.fixDef.restitution = 0.5;
+
+        this.bodyDef = new b2BodyDef;
+
+        //create ground
+        /*
+        this.bodyDef.type = b2Body.b2_staticBody;
+        this.fixDef.shape = new b2PolygonShape;
+        this.fixDef.shape.SetAsBox(26, 1);
+        this.bodyDef.position.Set(26, 0);
+        this.world.CreateBody(this.bodyDef).CreateFixture(this.fixDef);
+
+        this.bodyDef.position.Set(26, 76);
+        this.world.CreateBody(this.bodyDef).CreateFixture(this.fixDef);
+
+        this.fixDef.shape.SetAsBox(1, 38);
+        this.bodyDef.position.Set(0, 38);
+        this.world.CreateBody(this.bodyDef).CreateFixture(this.fixDef);
+
+        this.bodyDef.position.Set(52, 38);
+        this.world.CreateBody(this.bodyDef).CreateFixture(this.fixDef);
+
+        this.affectedBody = Array();
+        this.entryPoint = Array();
+        this.exitPoint = Array();
+
+        this.affectedByLaser = Array();
+        */
+
+        //setup debug draw
+        this.debugDraw = new b2DebugDraw();
+        this.debugDraw.SetSprite(document.getElementById("canvas").getContext("2d"));
+        this.debugDraw.SetDrawScale(this.scale);
+        this.debugDraw.SetFillAlpha(0.5);
+        this.debugDraw.SetLineThickness(1.0);
+        this.debugDraw.SetFlags(b2DebugDraw.e_shapeBit | b2DebugDraw.e_jointBit);
+        this.world.SetDebugDraw(this.debugDraw);
+
+        //mouse
+        this.mouseX;
+        this.mouseY;
+        this.mouseX1;
+        this.mouseY1;
+        this.mousePVec;
+        this.isMouseDown;
+        this.ball;
+        this.mouseJoint;
+        this.selected_tool=0;
+
+        this.canvasPosition = this.getElementPosition(this.canvas);
+
+        this.canvas.onselectstart = function() {
+          return false;
+        }
+      }//init
+
+
+      Tool.prototype.update = function() {
+
+        if(this.bodies2delete.length > 0){
+          for(var i=0; i<this.bodies2delete.length; i++){
+            console.log('deleting: '+i);
+            this.world.DestroyBody(this.bodies2delete[i]);
+          }
+          this.bodies2delete = [];
+        }
+
+        if(this.selectedBody && this.selected_tool != 2){
+          this.center.x = this.selectedBody.GetPosition().x;
+          this.center.y = this.selectedBody.GetPosition().y;
+        }
+
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        this.ctx.save();
+
+        this.world.Step(1 / 60, 10, 10);
+
+        //translate to center
+        this.ctx.translate(parseInt(this.center.x * -this.debugDraw.GetDrawScale() + (this.canvas.width / 2)), parseInt(this.center.y * -this.debugDraw.GetDrawScale() + (this.canvas.height / 2)));
+
+        if($('#render1').is(':checked') || $('#render3').is(':checked'))
+          this.world.DrawDebugData();
+
+        // Draw the x and y axes
+        this.ctx.save();
+        this.ctx.lineWidth = 0.1;
+        var grid = 5;
+        if(this.scale<1)
+          var grid = 100;
+        if(this.scale<0.03)
+          var grid = 1500;
+        if(this.scale<0.002)
+          var grid = 15000;
+        if(this.scale<0.000007)
+          var grid = 150000;
+        for(i=0; i<=this.canvas.height*grid*this.scale; i=i+grid*this.scale){
+          this.drawLine(this.ctx, -this.canvas.width, i, this.canvas.width+(this.canvas.width*this.scale), i);
+          if(i!=0)
+            this.drawLine(this.ctx, -this.canvas.width, i*-1, this.canvas.width+(this.canvas.width*this.scale), i*-1);
+        }
+        for(i=0; i<=this.canvas.width*grid*this.scale; i=i+grid*this.scale){
+          this.drawLine(this.ctx, i, -this.canvas.height, i, this.canvas.height+(this.canvas.height*this.scale));
+          if(i!=0)
+            this.drawLine(this.ctx, i*-1, -this.canvas.height, i*-1, this.canvas.height+(this.canvas.height*this.scale));
+        }
+
+        this.ctx.restore();
+
+        //draw
+        if($('#render2').is(':checked') || $('#render3').is(':checked')){
+          for( b = this.world.GetBodyList(); b; b = b.GetNext()) {
+            if(b.GetType() == b2Body.b2_dynamicBody) {
+              
+              var s = b.GetFixtureList().GetShape();
+              var pos = b.GetPosition();
+              if(s.m_type == 0){
+                //console.log('circ')
+                this.ctx.save();
+                this.ctx.beginPath();
+                this.ctx.arc(b.GetPosition().x*this.scale, b.GetPosition().y*this.scale, s.m_radius*this.scale, 0 , 2 * Math.PI, false);
+                this.ctx.closePath();
+
+                if((b.m_userData != null)&&(b.m_userData.imgsrc && b.m_userData.imgsize)){
+                  var size = b.m_userData.imgsize;
+                  var imgObj = new Image(size,size);
+                  imgObj.src = b.m_userData.imgsrc;
+                  // create pattern
+                  var ptrn = this.ctx.createPattern(imgObj,'no-repeat');
+                  this.ctx.fillStyle = ptrn;
+
+                  this.ctx.translate((pos.x)*this.scale,(pos.y)*this.scale);
+                  //this.ctx.translate((pos.x-s.m_radius)*this.scale,(pos.y-s.m_radius)*this.scale);
+                }else{
+                  this.ctx.fillStyle = "rgba(255, 0, 0, 0.5)";
+                  this.ctx.translate(pos.x*this.scale,pos.y*this.scale);
+                }
+
+                // Translate to the center of the object, then flip and scale appropriately
+                this.ctx.rotate(b.GetAngle());
+                var s2 = -1*(size/2);
+                var scale = b.m_userData.bodysize/-s2;
+                this.ctx.translate(-s.m_radius*this.scale, -s.m_radius*this.scale);
+                this.ctx.scale(scale*this.scale,scale*this.scale);
+
+                this.ctx.fill();
+                this.ctx.stroke();
+                
+                this.ctx.restore();
+              }else if(s.m_type == 1){
+                //console.log('square')
+                this.ctx.save();
+                this.ctx.translate(b.GetPosition().x*this.scale,b.GetPosition().y*this.scale);
+                this.ctx.rotate(b.GetAngle());
+                //this.ctx.translate(b.GetPosition().x*this.scale,b.GetPosition().y*this.scale);
+      
+                this.ctx.beginPath();
+                this.ctx.moveTo(s.m_vertices[0].x*this.scale, s.m_vertices[0].y*this.scale);
+                for(i=0;i<s.m_vertexCount;i++){
+                  if(i<s.m_vertexCount-1)
+                    this.ctx.lineTo(s.m_vertices[i].x*this.scale, s.m_vertices[i].y*this.scale, s.m_vertices[i+1].x*this.scale, s.m_vertices[i+1].y*this.scale);
+                  else
+                    this.ctx.lineTo(s.m_vertices[i].x*this.scale, s.m_vertices[i].y*this.scale, s.m_vertices[0].x*this.scale, s.m_vertices[0].y*this.scale);
+                }
+                this.ctx.closePath();
+                
+                if((b.m_userData != null)&&(b.m_userData.imgsrc && b.m_userData.imgsize)){
+                  var size = b.m_userData.imgsize;
+                  var imgObj = new Image(size,size);
+                  imgObj.src = b.m_userData.imgsrc;
+                  // create pattern
+                  var ptrn = this.ctx.createPattern(imgObj,'no-repeat');
+                  this.ctx.fillStyle = ptrn;
+                  //this.ctx.translate((pos.x)*this.scale,(pos.y)*this.scale);
+                }else{
+                  this.ctx.fillStyle = "rgba(255, 0, 0, 0.5)";
+                  //this.ctx.translate(pos.x*this.scale,pos.y*this.scale);
+                }
+
+                // Translate to the center of the object, then flip and scale appropriately
+                if(b.m_userData){
+                  var s2 = -1*(size/2);
+                  var scale = b.m_userData.bodysize/-s2;
+                }else{
+                  var s2 = 1;
+                  var scale = 1;
+                }
+                if((b.m_userData != null)&&(b.m_userData.imgsrc && b.m_userData.imgsize))
+                  this.ctx.translate(-b.m_userData.bodysize*this.scale, -b.m_userData.bodysize*this.scale);
+                this.ctx.scale(scale*this.scale,scale*this.scale);
+      
+                this.ctx.fill();
+                this.ctx.rotate(b.GetAngle());
+                this.ctx.restore();
+              }
+
+            }
+            else if(b.GetFixtureList()){
+              var s = b.GetFixtureList().GetShape();
+              if(s.m_type == 0){
+                //console.log('circ')
+                this.ctx.save();
+                this.ctx.beginPath();
+                this.ctx.arc(b.GetPosition().x*this.scale, b.GetPosition().y*this.scale, s.m_radius*this.scale, 0 , 2 * Math.PI, false);
+                this.ctx.closePath();
+                this.ctx.fillStyle = "rgba(255, 255, 0, 0.5)";
+                this.ctx.fill();
+                this.ctx.restore();
+              }else if(s.m_type == 1){
+                this.ctx.save();
+                this.ctx.translate(b.GetPosition().x*this.scale,b.GetPosition().y*this.scale);
+                this.ctx.beginPath();
+                this.ctx.moveTo(s.m_vertices[0].x*this.scale, s.m_vertices[0].y*this.scale);
+                for(i=0;i<s.m_vertexCount;i++){
+                  if(i<s.m_vertexCount-1)
+                    this.ctx.lineTo(s.m_vertices[i].x*this.scale, s.m_vertices[i].y*this.scale, s.m_vertices[i+1].x*this.scale, s.m_vertices[i+1].y*this.scale);
+                  else
+                    this.ctx.lineTo(s.m_vertices[i].x*this.scale, s.m_vertices[i].y*this.scale, s.m_vertices[0].x*this.scale, s.m_vertices[0].y*this.scale);
+                }
+                this.ctx.closePath();
+                this.ctx.fillStyle = "rgba(255, 0, 255, 0.5)";
+                this.ctx.fill();
+                this.ctx.restore();
+              }
+            }
+          }
+        }
+        if(this.mouseJoint){
+          this.drawLine(this.ctx, this.mouseJoint.GetAnchorA().x*this.scale, this.mouseJoint.GetAnchorA().y*this.scale, this.mouseJoint.GetAnchorB().x*this.scale, this.mouseJoint.GetAnchorB().y*this.scale);
+        }
+        if(this.selectedBody){
+          var s = this.selectedBody.GetFixtureList().GetShape();
+          if(s.m_type == 0){
+            this.ctx.save();
+            this.ctx.beginPath();
+            this.ctx.arc(this.selectedBody.GetPosition().x*this.scale, this.selectedBody.GetPosition().y*this.scale, s.m_radius*this.scale, 0 , 2 * Math.PI, false);
+            this.ctx.closePath();
+            this.ctx.fillStyle = "rgba(255, 255, 0, 0.5)";
+            this.ctx.fill();
+            this.ctx.restore();
+          }else if(s.m_type == 1){
+            this.ctx.save();
+            this.ctx.translate(this.selectedBody.GetPosition().x*this.scale,this.selectedBody.GetPosition().y*this.scale);
+            this.ctx.rotate(this.selectedBody.GetAngle());
+            this.ctx.beginPath();
+            this.ctx.moveTo(s.m_vertices[0].x*this.scale, s.m_vertices[0].y*this.scale);
+            for(i=0;i<s.m_vertexCount;i++){
+              if(i<s.m_vertexCount-1)
+                this.ctx.lineTo(s.m_vertices[i].x*this.scale, s.m_vertices[i].y*this.scale, s.m_vertices[i+1].x*this.scale, s.m_vertices[i+1].y*this.scale);
+              else
+                this.ctx.lineTo(s.m_vertices[i].x*this.scale, s.m_vertices[i].y*this.scale, s.m_vertices[0].x*this.scale, s.m_vertices[0].y*this.scale);
+            }
+            this.ctx.closePath();
+            this.ctx.fillStyle = "rgba(255, 255, 0, 0.5)";
+            this.ctx.fill();
+            this.ctx.restore();
+          }
+        }
+
+        // Draw debug
+        this.ctx.save();
+        this.ctx.scale(1,1);
+        //reset
+        this.ctx.setTransform(1, 0, 0, 1, 0, 0);
+        this.ctx.textAlign = 'right';
+        this.ctx.fillStyle = 'yellow';
+        this.ctx.fillText('scale = ' + this.scale, this.canvas.width-15, 60);
+        this.ctx.fillText('selected_tool = ' + this.selected_tool, this.canvas.width-15, 70);
+        if(this.selectedBody)
+          this.ctx.fillText('selected_body = ' + this.selectedBody.GetPosition().x, this.canvas.width-15, 80);
+        if(this.affectedBody){
+          this.ctx.fillText('affectedBodies = ' + this.affectedBody.length, this.canvas.width-15, 90);
+          if(this.affectedBody[0] != null){
+            if(this.affectedBody[0].part1Vertices != null){
+              this.ctx.fillText('affectedBody[0] parts1 = ' + this.affectedBody[0].part1Vertices.length, this.canvas.width-15, 100);
+            }
+            if(this.affectedBody[0].part2Vertices != null){
+              this.ctx.fillText('affectedBody[0] parts2 = ' + this.affectedBody[0].part2Vertices.length, this.canvas.width-15, 110);
+            }
+          }
+        }
+        this.ctx.restore();
+
+        this.ctx.restore();
+
+        this.world.ClearForces();
+
+        var bsize = 2.5*this.scale;
+        this.ctx.drawImage(this.image,null,null,80,80,
+          this.canvas.width/2 -bsize/2,
+          this.canvas.height/2 -bsize/2,
+          bsize,
+          bsize);
+          
+        if(this.mouseX1 && this.mouseY1){
+          var imgdata = this.ctx.getImageData(this.mouseX1, this.mouseY1, 1, 1).data;
+          // console.log(imgdata)
+        }
+
+      }//update
+
+      Tool.prototype.drawLine = function(contextO, startx, starty, endx, endy) {
+        contextO.strokeStyle = 'cyan';
+        contextO.beginPath();
+        contextO.moveTo(startx, starty);
+        contextO.lineTo(endx, endy);
+        contextO.closePath();
+        contextO.stroke();
+      }
+
+      Tool.prototype.handleMouseMove = function(e) {
+        this.mouseX = (e.clientX) / this.debugDraw.GetDrawScale() + this.center.x - (this.canvas.width / 2) / this.debugDraw.GetDrawScale();
+        this.mouseY = (e.clientY) / this.debugDraw.GetDrawScale() + this.center.y - (this.canvas.height / 2) / this.debugDraw.GetDrawScale();
+        this.mouseX1 = e.clientY;
+        this.mouseY1 = e.clientX;
+
+        //console.log(e.clientX+' '+this.debugDraw.GetDrawScale()+' '+this.mouseX + ', ' + this.mouseY);
+      };
+
+      Tool.prototype.getBodyAtMouse = function() {
+        mousePVec = new b2Vec2(this.mouseX, this.mouseY);
+        var aabb = new b2AABB();
+        aabb.lowerBound.Set(this.mouseX - 0.001, this.mouseY - 0.001);
+        aabb.upperBound.Set(this.mouseX + 0.001, this.mouseY + 0.001);
+
+        // Query the world for overlapping shapes.
+        body = null;
+        this.world.QueryAABB(this.getBodyCB, aabb);
+        return body;
+      }
+
+      Tool.prototype.getBodyCB = function(fixture) {
+        //if (fixture.GetBody().GetType() != b2Body.b2_staticBody) {
+          if (fixture.GetShape().TestPoint(fixture.GetBody().GetTransform(), mousePVec)) {
+            console.log('body')
+            body = fixture.GetBody();
+            return false;
+          }else
+            console.log('!body')
+        //}
+        console.log('nada')
+        return true;
+      }
+      
+      Tool.prototype.doMouseWheel = function(a) {
+        var e = window.event || a; // old IE support
+        e.preventDefault();
+        var d = e.wheelDelta || e.detail*(-120);
+        if (d < 0)
+          this.scale = this.debugDraw.GetDrawScale() * 1.1;
+        else
+          this.scale = this.debugDraw.GetDrawScale() * 1 / 1.1;
+        this.debugDraw.SetDrawScale(this.scale);
+      }
+
+      //http://js-tut.aardon.de/js-tut/tutorial/position.html
+      Tool.prototype.getElementPosition = function(element) {
+        var elem = element, tagname = "", x = 0, y = 0;
+        while (( typeof (elem) == "object") && ( typeof (elem.tagName) != "undefined")) {
+          y += elem.offsetTop;
+          x += elem.offsetLeft;
+          tagname = elem.tagName.toUpperCase();
+          if (tagname == "BODY")
+            elem = 0;
+          if ( typeof (elem) == "object") {
+            if ( typeof (elem.offsetParent) == "object")
+              elem = elem.offsetParent;
+          }
+        }
+        return {
+          x : x,
+          y : y
+        };
+      }
+
+      //init
+      window.tool = new Tool();
+      
+      // Listeners
+      //Change to animationframe
+      window.setInterval(function(){window.tool.update()}, 1000 / 60);
+      window.addEventListener("mousewheel", function(b) {
+        window.tool.doMouseWheel(b)
+      }, false);
+      window.addEventListener("DOMMouseScroll", function(b) {
+        window.tool.doMouseWheel(b)
+      }, false);
+      
+      document.addEventListener('mousemove', function(e){ tool.handleMouseMove(e) }, false);
+      
+      document.getElementById("canvas").addEventListener("mousedown", function(e) {
+        tool.isMouseDown = true;
+      }, true);
+      
+      document.addEventListener("mouseup", function() {
+        tool.isMouseDown = false;
+      }, true);
+
+		</script>
+		
+	</body>
+</html>

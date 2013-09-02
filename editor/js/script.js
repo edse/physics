@@ -13,6 +13,8 @@ window.requestAnimFrame = (function(){
 
 // constructor
 function Tool() {
+  this.initialState = null;
+  this.loadSavedWorlds();
   this.init();
   this.update();
 }
@@ -53,102 +55,150 @@ Tool.prototype.init = function() {
   , true //allow sleep
   );
 
-  this.fixDef = new b2FixtureDef;
-  this.fixDef.density = 1;
-  this.fixDef.friction = 0.5;
-  this.fixDef.restitution = 0.5;
-
-  this.bodyDef = new b2BodyDef;
-
-  //create ground
-  this.bodyDef.type = b2Body.b2_staticBody;
-  this.fixDef.shape = new b2PolygonShape;
-  this.fixDef.shape.SetAsBox(26, 1);
-  this.bodyDef.position.Set(26, 0);
-  this.world.CreateBody(this.bodyDef).CreateFixture(this.fixDef);
-
-  this.bodyDef.position.Set(26, 76);
-  this.world.CreateBody(this.bodyDef).CreateFixture(this.fixDef);
-
-  this.fixDef.shape.SetAsBox(1, 38);
-  this.bodyDef.position.Set(0, 38);
-  this.world.CreateBody(this.bodyDef).CreateFixture(this.fixDef);
-
-  this.bodyDef.position.Set(52, 38);
-  this.world.CreateBody(this.bodyDef).CreateFixture(this.fixDef);
-  
   this.affectedBody = Array();
   this.entryPoint = Array();
   this.exitPoint = Array();
-  
   this.affectedByLaser = Array();
 
-  /*
+  console.log(this.initialState);
+  if(this.initialState==null){
+    this.fixDef = new b2FixtureDef;
+    this.fixDef.density = 1;
+    this.fixDef.friction = 0.5;
+    this.fixDef.restitution = 0.5;
+  
+    this.bodyDef = new b2BodyDef;
+  
+    //create ground
+    this.bodyDef.type = b2Body.b2_staticBody;
+    this.fixDef.shape = new b2PolygonShape;
+    this.fixDef.shape.SetAsBox(26, 1);
+    
+    this.bodyDef.position.Set(26, 0);
+    this.world.CreateBody(this.bodyDef).CreateFixture(this.fixDef);
+  
+    this.bodyDef.position.Set(26, 76);
+    this.world.CreateBody(this.bodyDef).CreateFixture(this.fixDef);
+  
+    this.fixDef.shape.SetAsBox(1, 38);
+    this.bodyDef.position.Set(0, 38);
+    this.world.CreateBody(this.bodyDef).CreateFixture(this.fixDef);
+  
+    this.bodyDef.position.Set(52, 38);
+    this.world.CreateBody(this.bodyDef).CreateFixture(this.fixDef);
+    
+  
+    //Complex bodies code
+    var entity = {id: 4, x: 10, y: 10, polys: [
+    [{x: 432, y: 1096}, {x: 436, y: 1096}, {x: 435, y:1100}, {x: 432, y:1100}],
+    [{x: 367, y: 1096}, {x: 367, y: 1100}, {x: 364, y:1100}, {x: 363, y:1096}],
+    [{x: 436, y: 1096}, {x: 436, y: 1121}, {x: 435, y:1120}, {x: 435, y:1100}],
+    [{x: 363, y: 1096}, {x: 364, y: 1100}, {x: 364, y:1120}, {x: 363, y:1121}],
+    [{x: 363, y: 1121}, {x: 364, y: 1120}, {x: 435, y:1120}, {x: 436, y:1121}]
+    ]};
+    var entity = {id: 4, x: 10, y: 10, polys: [
+      [{x: -1, y: -1}, {x: 1, y: -1}, {x: 1, y: 1}, {x: -1, y: 1}], // box
+      [{x: 1, y: -1.5}, {x: 2, y: 0}, {x: 1, y: 1.5}]  // arrow
+    ]};
+    for (var j = 0; j < entity.polys.length; j++) {
+      var points = entity.polys[j];
+      var vecs = [];
+      for (var i = 0; i < points.length; i++) {
+        var vec = new b2Vec2();
+        vec.Set(points[i].x, points[i].y);
+        vecs[i] = vec;
+      }
+      this.bodyDef.type = b2Body.b2_dynamicBody;
+      this.bodyDef.position.Set(3, 3);
+      this.fixDef.shape = new b2PolygonShape;
+      this.fixDef.shape.SetAsArray(vecs, vecs.length);
+      this.world.CreateBody(this.bodyDef).CreateFixture(this.fixDef);
+    }
 
-  //Complex bodies code
-  var entity = {id: 4, x: 10, y: 10, polys: [
-  [{x: 432, y: 1096}, {x: 436, y: 1096}, {x: 435, y:1100}, {x: 432, y:1100}],
-  [{x: 367, y: 1096}, {x: 367, y: 1100}, {x: 364, y:1100}, {x: 363, y:1096}],
-  [{x: 436, y: 1096}, {x: 436, y: 1121}, {x: 435, y:1120}, {x: 435, y:1100}],
-  [{x: 363, y: 1096}, {x: 364, y: 1100}, {x: 364, y:1120}, {x: 363, y:1121}],
-  [{x: 363, y: 1121}, {x: 364, y: 1120}, {x: 435, y:1120}, {x: 436, y:1121}]
-  ]};
-  for (var j = 0; j < entity.polys.length; j++) {
-  var points = entity.polys[j];
-  var vecs = [];
-  for (var i = 0; i < points.length; i++) {
-  var vec = new b2Vec2();
-  vec.Set(points[i].x/20, points[i].y/20);
-  vecs[i] = vec;
-  }
-  bodyDef.type = b2Body.b2_staticBody;
-  bodyDef.position.Set(3, 3);
-  fixDef.shape = new b2PolygonShape;
-  fixDef.shape.SetAsArray(vecs, vecs.length);
-  world.CreateBody(bodyDef).CreateFixture(fixDef);
-  }
-  */
-
-  //create some objects
-  this.bodyDef.type = b2Body.b2_dynamicBody;
-  var rad = 1;
-  var data = { 
-    imgsrc: "/editor/img/ball.png",
-    imgsize: 80,
-    bodysize: rad + 0.1
-  }
-  for (var i = 0; i < 41; ++i) {
-    if (i == 40){
-      rad = 0.15;
-      data = { 
-        imgsrc: "/editor/img/ball.png",
-        imgsize: 80,
-        bodysize: rad + 0.1,
-        ball: 1
+    //create some objects
+    this.bodyDef.type = b2Body.b2_dynamicBody;
+    var rad = 1;
+    var data = { 
+      imgsrc: "/editor/img/ball.png",
+      imgsize: 80,
+      bodysize: rad + 0.1
+    }
+    for (var i = 0; i < 41; ++i) {
+      if (i == 40){
+        rad = 0.15;
+        data = { 
+          imgsrc: "/editor/img/ball.png",
+          imgsize: 80,
+          bodysize: rad + 0.1,
+          ball: 1
+        }
+      }
+      //radius
+      this.fixDef.shape = new b2CircleShape(rad + 0.1);
+      this.bodyDef.position.x = Math.random() * 40 + 1;
+      this.bodyDef.position.y = Math.random() * 30 + 5;
+      this.bodyDef.userData = data;
+      
+      var b = this.world.CreateBody(this.bodyDef);
+      b.CreateFixture(this.fixDef);
+      //b.SetLinearDamping(3);
+      //b.SetAngularDamping(3);
+      if (i == 40) {
+        //b.SetLinearDamping(2);
+        //b.SetAngularDamping(2);
+        this.ball = b;
       }
     }
-    //radius
-    this.fixDef.shape = new b2CircleShape(rad + 0.1);
-    this.bodyDef.position.x = Math.random() * 40 + 1;
-    this.bodyDef.position.y = Math.random() * 30 + 5;
-    this.bodyDef.userData = data;
     
-    var b = this.world.CreateBody(this.bodyDef);
-    b.CreateFixture(this.fixDef);
-    //b.SetLinearDamping(3);
-    //b.SetAngularDamping(3);
-    if (i == 40) {
-      //b.SetLinearDamping(2);
-      //b.SetAngularDamping(2);
-      this.ball = b;
+    this.selectedBody = this.ball;
+    this.selectedBody.SetPosition(new b2Vec2(20, 20));
+  
+  }else{
+    for(var i=0; i<this.initialState.body.length; i++) {
+      console.log(this.initialState.body[i]);
+      var body = this.initialState.body[i];
+      this.fixDef = new b2FixtureDef;
+      this.fixDef.density = body.density;
+      this.fixDef.friction = body.friction;
+      this.fixDef.restitution = body.restitution;
+      this.bodyDef = new b2BodyDef;
+      this.bodyDef.type = body.type;
+      this.bodyDef.userData = body.userData;
+      this.bodyDef.position.x = body.position.x;
+      this.bodyDef.position.y = body.position.y;
+      if(body.fixture[0].circle){
+        console.log("circle");
+        this.fixDef.shape = new b2CircleShape(body.fixture[0].circle.radius);
+        this.world.CreateBody(this.bodyDef).CreateFixture(this.fixDef);
+      }else if(body.fixture[0].polygon){
+        console.log("polygon");
+        console.log(body.fixture[0].polygon.vertices);
+        var vecs = [];
+        for (var j=0; j<body.fixture[0].polygon.vertices.length; j++) {
+          var points = body.fixture[0].polygon.vertices[j];
+          var vec = new b2Vec2();
+          vec.Set(points.x, points.y);
+          vecs.push(vec);
+          //var vecs = [];
+          /*
+          for (var i = 0; i < points.length; i++) {
+            var vec = new b2Vec2();
+            vec.Set(points[i].x, points[i].y);
+            vecs.push(vec);
+            console.log(vec)
+          }
+          */
+        }
+        this.fixDef.shape = new b2PolygonShape;
+        this.fixDef.shape.SetAsArray(vecs, vecs.length);
+        this.world.CreateBody(this.bodyDef).CreateFixture(this.fixDef);
+      }
+      
     }
   }
-  
-  this.selectedBody = this.ball;
-  this.selectedBody.SetPosition(new b2Vec2(20, 20));
 
-  var vecs = new Array();
   /*
+  var vecs = new Array();
   vecs[0] = new b2Vec2(20, 20);
   vecs[1] = new b2Vec2(30, 20);
   vecs[2] = new b2Vec2(30, 30);
@@ -530,23 +580,64 @@ Tool.prototype.update = function() {
   }
 
   this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-
   this.ctx.save();
-    
-  //this.ctx.translate(parseInt(this.ball.GetPosition().x * -this.debugDraw.GetDrawScale() + (this.canvas.width / 2)), parseInt(this.ball.GetPosition().y * -this.debugDraw.GetDrawScale() + (this.canvas.height / 2)));
-  this.ctx.translate(parseInt(this.center.x * -this.debugDraw.GetDrawScale() + (this.canvas.width / 2)), parseInt(this.center.y * -this.debugDraw.GetDrawScale() + (this.canvas.height / 2)));
-
-  // Draw the x and y axes
-  this.ctx.lineWidth = 0.02 * this.debugDraw.GetDrawScale();
-  this.drawLine(this.ctx, -parseInt(this.canvas.width * this.debugDraw.GetDrawScale()), 0, parseInt(this.canvas.width * this.debugDraw.GetDrawScale()), 0);
-  this.drawLine(this.ctx, 0, -parseInt(this.canvas.height * this.debugDraw.GetDrawScale()), 0, parseInt(this.canvas.height * this.debugDraw.GetDrawScale()));
-
-  //ctx.rotate(-ball.GetAngle());
 
   this.world.Step(1 / 60, 10, 10);
+
+  //translate to center
+  this.ctx.translate(parseInt(this.center.x * -this.debugDraw.GetDrawScale() + (this.canvas.width / 2)), parseInt(this.center.y * -this.debugDraw.GetDrawScale() + (this.canvas.height / 2)));
   
   if($('#render1').is(':checked') || $('#render3').is(':checked'))
     this.world.DrawDebugData();
+
+  // Draw the x and y axes
+  this.ctx.save();
+  this.ctx.lineWidth = 0.1;
+  var grid = 5;
+  if(this.scale<1)
+  	var grid = 100;
+  if(this.scale<0.03)
+  	var grid = 1500;
+  if(this.scale<0.002)
+  	var grid = 15000;
+  if(this.scale<0.000007)
+  	var grid = 150000;
+  for(i=0; i<=this.canvas.height*grid*this.scale; i=i+grid*this.scale){
+  	this.drawLine(this.ctx, -this.canvas.width, i, this.canvas.width+(this.canvas.width*this.scale), i);
+  	if(i!=0)
+  	  this.drawLine(this.ctx, -this.canvas.width, i*-1, this.canvas.width+(this.canvas.width*this.scale), i*-1);
+  }
+
+  for(i=0; i<=this.canvas.width*grid*this.scale; i=i+grid*this.scale){
+  	this.drawLine(this.ctx, i, -this.canvas.height+(-this.canvas.height*this.scale), i, this.canvas.height+(this.canvas.height*this.scale));
+  	if(i!=0)
+  	  this.drawLine(this.ctx, i*-1, -this.canvas.height+(-this.canvas.height*this.scale), i*-1, this.canvas.height+(this.canvas.height*this.scale));
+  }
+  //this.drawLine(this.ctx, -this.canvas.width, 20*this.scale, this.canvas.width, 20*this.scale);
+  
+  //this.drawLine(this.ctx, -this.canvas.width, parseInt(21 * this.debugDraw.GetDrawScale()), this.canvas.width, parseInt(21 * this.debugDraw.GetDrawScale()));
+  //this.drawLine(this.ctx, -this.canvas.width, parseInt(22 * this.debugDraw.GetDrawScale()), this.canvas.width, parseInt(22 * this.debugDraw.GetDrawScale()));
+  //this.drawLine(this.ctx, -this.canvas.width, parseInt(23 * this.debugDraw.GetDrawScale()), this.canvas.width, parseInt(23 * this.debugDraw.GetDrawScale()));
+  //this.drawLine(this.ctx, -this.canvas.width, parseInt(24 * this.debugDraw.GetDrawScale()), this.canvas.width, parseInt(24 * this.debugDraw.GetDrawScale()));
+  //this.drawLine(this.ctx, -this.canvas.width, parseInt(10 * this.debugDraw.GetDrawScale()), this.canvas.width, parseInt(10 * this.debugDraw.GetDrawScale()));
+  //this.drawLine(this.ctx, -this.canvas.width, parseInt(15 * this.debugDraw.GetDrawScale()), this.canvas.width, parseInt(15 * this.debugDraw.GetDrawScale()));
+  // /this.drawLine(this.ctx, -this.canvas.width, parseInt(20 * this.debugDraw.GetDrawScale()), this.canvas.width, parseInt(20 * this.debugDraw.GetDrawScale()));
+  
+  this.ctx.restore();
+  
+  //this.drawLine(this.ctx, 0, -this.canvas.height, 0, this.canvas.height);
+  //this.drawLine(this.ctx, 10, -this.canvas.height, 10, this.canvas.height);
+
+  //this.ctx.lineWidth = 0.1 * this.debugDraw.GetDrawScale();
+  //this.drawLine(this.ctx, -parseInt(this.canvas.width * this.debugDraw.GetDrawScale()), 0, parseInt(this.canvas.width * this.debugDraw.GetDrawScale()), 0);  
+  //this.drawLine(this.ctx, 0, -parseInt(this.canvas.height * this.debugDraw.GetDrawScale()), 0, parseInt(this.canvas.height * this.debugDraw.GetDrawScale()));
+  
+  /*
+  for(var i=0; i<100; i++){
+    this.drawLine(this.ctx, -this.canvas.width, i*5, this.canvas.width, i*5);
+    this.drawLine(this.ctx, i*5, -this.canvas.height, i*5, this.canvas.height);
+  }
+  */
 
   //draw
   if($('#render2').is(':checked') || $('#render3').is(':checked')){
@@ -835,23 +926,29 @@ Tool.prototype.update = function() {
   //drawend
 
   // Draw debug
-  this.ctx.fillText('scale = ' + this.scale, 0, -30);
-  this.ctx.fillText('selected_tool = ' + this.selected_tool, 0, -20);
+  this.ctx.save();
+  this.ctx.scale(1,1);
+  //reset
+  this.ctx.setTransform(1, 0, 0, 1, 0, 0);
+  this.ctx.textAlign = 'right';
+  this.ctx.fillStyle = 'yellow';
+  this.ctx.fillText('scale = ' + this.scale, this.canvas.width-15, 60);
+  this.ctx.fillText('selected_tool = ' + this.selected_tool, this.canvas.width-15, 70);
   if(this.selectedBody)
-    this.ctx.fillText('selected_body = ' + this.selectedBody.GetPosition().x, 0, -10);
-
+    this.ctx.fillText('selected_body = ' + this.selectedBody.GetPosition().x, this.canvas.width-15, 80);
   if(this.affectedBody){
-    this.ctx.fillText('affectedBodies = ' + this.affectedBody.length, 0, -40);
+    this.ctx.fillText('affectedBodies = ' + this.affectedBody.length, this.canvas.width-15, 90);
     if(this.affectedBody[0] != null){
       if(this.affectedBody[0].part1Vertices != null){
-        this.ctx.fillText('affectedBody[0] parts1 = ' + this.affectedBody[0].part1Vertices.length, 0, -50);
+        this.ctx.fillText('affectedBody[0] parts1 = ' + this.affectedBody[0].part1Vertices.length, this.canvas.width-15, 100);
       }
       if(this.affectedBody[0].part2Vertices != null){
-        this.ctx.fillText('affectedBody[0] parts2 = ' + this.affectedBody[0].part2Vertices.length, 0, -60);
+        this.ctx.fillText('affectedBody[0] parts2 = ' + this.affectedBody[0].part2Vertices.length, this.canvas.width-15, 110);
       }
     }
   }
-
+  this.ctx.restore();
+  
   this.ctx.restore();
 
   this.world.ClearForces();
@@ -1041,9 +1138,100 @@ Tool.prototype.worldLoad = function() {
   $('#world-load').fadeIn();
 }
 
+Tool.prototype.worldLoadFromDisk = function() {
+  this.initialState = JSON.parse(localStorage[$("#saved-worlds option:selected").val()]);
+  console.log(this.initialState);
+  this.init();
+}
+
 Tool.prototype.worldSave = function() {
   this.unselect();
   $('#world-save').fadeIn();
+}
+
+Tool.prototype.worldSaveToDisk = function() {
+  var select = document.getElementById("saved-worlds");
+  var key = $('#world-name').val();
+  
+  var bodies = [];
+  var fixtures = [];
+  for( b = this.world.GetBodyList(); b; b = b.GetNext()) {
+    var pos = b.GetPosition();
+    var f = b.GetFixtureList();
+    if(f!=null){
+      console.log(f);
+      var shape = f.GetShape();
+      var fixture = {
+        "density": f.GetDensity(),
+        "friction": f.GetFriction(),
+        "restitution": f.GetRestitution(),
+        "shape": {
+          type: shape.GetType(),
+        }
+      };
+      if(shape.GetType() == 0){
+        fixture.circle = {
+          center: {
+            x: b.GetPosition().x,
+            y: b.GetPosition().y
+          },
+          radius: shape.GetRadius()
+        };
+      }else if(shape.GetType() == 1){
+        var vertices = [];
+        var v = shape.GetVertices();
+        for (var j = 0; j < v.length; j++) {
+          vertices.push({
+            x: v[j].x,
+            y: v[j].y,
+          });
+        }
+        fixture.polygon = {
+          vertices: vertices
+        }
+      }
+      
+      var body = {
+        "type": b.GetType(),
+        "m_type": b.m_type,
+        "angle": b.m_angle,
+        "angularVelocity": b.m_angularVelocity,
+        "angularDamping": b.m_angularDamping,
+        "linearDamping": b.m_linearDamping,
+        "linearVelocity": b.m_linearVelocity,
+        "torque": b.m_torque,
+        "angularDamping": b.m_angularDamping,
+        "userData": b.m_userData,
+        "fixtureCount": b.m_fixtureCount,
+        "force": b.m_force,
+        "mass": b.m_mass,
+        "inertiaScale": b.m_inertiaScale,
+        "position":{
+          x: b.GetPosition().x,
+          y: b.GetPosition().y
+        },
+        "fixture": [fixture]
+      }
+      //console.log(b);
+      bodies.push(body);
+    }
+  }
+  
+  console.log("bodies: "+bodies.length);
+  
+  var world = {
+    "gravity": {
+      "x": this.world.m_gravity.x,
+      "y": this.world.m_gravity.y }, 
+    "allowSleep": this.world.m_allowSleep, 
+    "body": bodies
+  };
+  
+  console.log(world);
+
+  localStorage[key] = JSON.stringify(world);
+  select.appendChild(new Option(key));
+  console.log("saved as "+key);
 }
 
 Tool.prototype.bodyDuplicate = function() {
@@ -1083,7 +1271,7 @@ Tool.prototype.bodyDuplicate = function() {
 }
 
 Tool.prototype.bodyMove = function() {
-  this.unselect();
+  //this.unselect();
   if(this.selectedBody){
     $('#inspector').fadeOut();
     this.selected_tool = 2;
@@ -1159,6 +1347,14 @@ Tool.prototype.sliceBody = function() {
   this.entryPoint = Array();
   this.selected_tool = 4;
   $('#selected_tool').html('Trace a line to cut the intersecting bodies');
+}
+
+Tool.prototype.loadSavedWorlds = function() {
+  var select = document.getElementById("saved-worlds");
+  select.innerHTML = '';
+  for(var k in localStorage) {
+    select.appendChild(new Option(k));
+  }
 }
 
 function slice1(fixture, point, normal, fraction) {
