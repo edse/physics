@@ -10,13 +10,15 @@ window.requestAnimFrame = (function(){
     };
 })();
 
-
 // constructor
 function Tool() {
+  this.stats = new Stats();
+  document.body.appendChild(this.stats.domElement);
+
   this.initialState = null;
   this.loadSavedWorlds();
   this.init();
-  this.update();
+  //this.update();
 }
 
 //init function
@@ -48,6 +50,8 @@ Tool.prototype.init = function() {
   this.canvas = document.getElementById("canvas");
   this.ctx = this.canvas.getContext("2d");
 
+  //this.canvas.width = window.innerWidth;
+  //this.canvas.height = window.innerHeight;
   this.canvas.width = window.innerWidth;
   this.canvas.height = window.innerHeight;
 
@@ -253,6 +257,8 @@ Tool.prototype.init = function() {
   this.canvas.onselectstart = function() {
     return false;
   }
+  
+  this.update();
 
 }//init
 
@@ -590,6 +596,7 @@ Tool.prototype.update = function() {
   if($('#render1').is(':checked') || $('#render3').is(':checked'))
     this.world.DrawDebugData();
 
+if($('#set_grid').is(':checked')){
   // Draw the x and y axes
   this.ctx.save();
   this.ctx.lineWidth = 0.1;
@@ -602,6 +609,7 @@ Tool.prototype.update = function() {
   	var grid = 15000;
   if(this.scale<0.000007)
   	var grid = 150000;
+
   for(i=0; i<=this.canvas.height*grid*this.scale; i=i+grid*this.scale){
   	this.drawLine(this.ctx, -this.canvas.width, i, this.canvas.width+(this.canvas.width*this.scale), i);
   	if(i!=0)
@@ -613,31 +621,8 @@ Tool.prototype.update = function() {
   	if(i!=0)
   	  this.drawLine(this.ctx, i*-1, -this.canvas.height+(-this.canvas.height*this.scale), i*-1, this.canvas.height+(this.canvas.height*this.scale));
   }
-  //this.drawLine(this.ctx, -this.canvas.width, 20*this.scale, this.canvas.width, 20*this.scale);
-  
-  //this.drawLine(this.ctx, -this.canvas.width, parseInt(21 * this.debugDraw.GetDrawScale()), this.canvas.width, parseInt(21 * this.debugDraw.GetDrawScale()));
-  //this.drawLine(this.ctx, -this.canvas.width, parseInt(22 * this.debugDraw.GetDrawScale()), this.canvas.width, parseInt(22 * this.debugDraw.GetDrawScale()));
-  //this.drawLine(this.ctx, -this.canvas.width, parseInt(23 * this.debugDraw.GetDrawScale()), this.canvas.width, parseInt(23 * this.debugDraw.GetDrawScale()));
-  //this.drawLine(this.ctx, -this.canvas.width, parseInt(24 * this.debugDraw.GetDrawScale()), this.canvas.width, parseInt(24 * this.debugDraw.GetDrawScale()));
-  //this.drawLine(this.ctx, -this.canvas.width, parseInt(10 * this.debugDraw.GetDrawScale()), this.canvas.width, parseInt(10 * this.debugDraw.GetDrawScale()));
-  //this.drawLine(this.ctx, -this.canvas.width, parseInt(15 * this.debugDraw.GetDrawScale()), this.canvas.width, parseInt(15 * this.debugDraw.GetDrawScale()));
-  // /this.drawLine(this.ctx, -this.canvas.width, parseInt(20 * this.debugDraw.GetDrawScale()), this.canvas.width, parseInt(20 * this.debugDraw.GetDrawScale()));
-  
   this.ctx.restore();
-  
-  //this.drawLine(this.ctx, 0, -this.canvas.height, 0, this.canvas.height);
-  //this.drawLine(this.ctx, 10, -this.canvas.height, 10, this.canvas.height);
-
-  //this.ctx.lineWidth = 0.1 * this.debugDraw.GetDrawScale();
-  //this.drawLine(this.ctx, -parseInt(this.canvas.width * this.debugDraw.GetDrawScale()), 0, parseInt(this.canvas.width * this.debugDraw.GetDrawScale()), 0);  
-  //this.drawLine(this.ctx, 0, -parseInt(this.canvas.height * this.debugDraw.GetDrawScale()), 0, parseInt(this.canvas.height * this.debugDraw.GetDrawScale()));
-  
-  /*
-  for(var i=0; i<100; i++){
-    this.drawLine(this.ctx, -this.canvas.width, i*5, this.canvas.width, i*5);
-    this.drawLine(this.ctx, i*5, -this.canvas.height, i*5, this.canvas.height);
-  }
-  */
+}
 
   //draw
   if($('#render2').is(':checked') || $('#render3').is(':checked')){
@@ -952,8 +937,10 @@ Tool.prototype.update = function() {
   this.ctx.restore();
 
   this.world.ClearForces();
-  
-  //requestAnimFrame(this.update());
+    
+  this.stats.update();
+  window.requestAnimFrame(function(){window.tool.update()});
+  //this.update()
 
 }//update
 
@@ -1513,7 +1500,9 @@ window.tool = new Tool();
 
 // Listeners
 //Change to animationframe
-window.setInterval(function(){window.tool.update()}, 1000 / 60);
+//window.setInterval(function(){window.tool.update()}, 1000 / 60);
+//window.requestAnimFrame(function(){window.tool.update()});
+
 window.addEventListener("mousewheel", function(b) {
   window.tool.doMouseWheel(b)
 }, false);

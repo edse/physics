@@ -19,11 +19,17 @@
 	  /*padding-top: 60px;
 	  padding-bottom: 40px;*/
 	}
+	#stats{
+	  position: absolute;
+	  top: 92%;
+	  left: 91%;
+	}
 	</style>
 	<link rel="stylesheet" href="css/bootstrap-responsive.min.css">
 	<link rel="stylesheet" href="css/style.css">
 
-	<script src="js/libs/modernizr-2.5.3-respond-1.1.0.min.js"></script>
+  <script src="js/libs/modernizr-2.5.3-respond-1.1.0.min.js"></script>
+  <script src="js/libs/stats.js"></script>
 </head>
 <body>
 <!--[if lt IE 7]><p class=chromeframe>Your browser is <em>ancient!</em> <a href="http://browsehappy.com/">Upgrade to a different browser</a> or <a href="http://www.google.com/chromeframe/?redirect=true">install Google Chrome Frame</a> to experience this site.</p><![endif]-->
@@ -102,6 +108,16 @@
             <label class="control-label">Gravity</label>
             <div class="controls">
               <input type="text" class="input-small" id="set_gravity_x" value="0.0" />
+              <input type="text" class="input-small" id="set_gravity_y" value="0.0" />
+            </div>
+          </div>
+          <div class="control-group">
+            <label class="control-label">Grid</label>
+            <label class="checkbox">
+              <input type="checkbox" id="set_grid" value="1" /> Check me out
+            </label>
+            <div class="controls">
+              
               <input type="text" class="input-small" id="set_gravity_y" value="0.0" />
             </div>
           </div>
