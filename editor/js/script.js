@@ -162,9 +162,9 @@ Tool.prototype.init = function() {
       console.log(this.initialState.body[i]);
       var body = this.initialState.body[i];
       this.fixDef = new b2FixtureDef;
-      this.fixDef.density = body.density;
-      this.fixDef.friction = body.friction;
-      this.fixDef.restitution = body.restitution;
+      this.fixDef.density = body.fixture[0].density;
+      this.fixDef.friction = body.fixture[0].friction;
+      this.fixDef.restitution = body.fixture[0].restitution;
       this.bodyDef = new b2BodyDef;
       this.bodyDef.type = body.type;
       this.bodyDef.userData = body.userData;
@@ -595,34 +595,35 @@ Tool.prototype.update = function() {
   
   if($('#render1').is(':checked') || $('#render3').is(':checked'))
     this.world.DrawDebugData();
-
-if($('#set_grid').is(':checked')){
-  // Draw the x and y axes
-  this.ctx.save();
-  this.ctx.lineWidth = 0.1;
-  var grid = 5;
-  if(this.scale<1)
-  	var grid = 100;
-  if(this.scale<0.03)
-  	var grid = 1500;
-  if(this.scale<0.002)
-  	var grid = 15000;
-  if(this.scale<0.000007)
-  	var grid = 150000;
-
-  for(i=0; i<=this.canvas.height*grid*this.scale; i=i+grid*this.scale){
-  	this.drawLine(this.ctx, -this.canvas.width, i, this.canvas.width+(this.canvas.width*this.scale), i);
-  	if(i!=0)
-  	  this.drawLine(this.ctx, -this.canvas.width, i*-1, this.canvas.width+(this.canvas.width*this.scale), i*-1);
+  
+  //grid
+  if($('#set_grid').is(':checked')){
+    // Draw the x and y axes
+    this.ctx.save();
+    this.ctx.lineWidth = 0.1;
+    var grid = 5;
+    if(this.scale<1)
+    	var grid = 100;
+    if(this.scale<0.03)
+    	var grid = 1500;
+    if(this.scale<0.002)
+    	var grid = 15000;
+    if(this.scale<0.000007)
+    	var grid = 150000;
+  
+    for(i=0; i<=this.canvas.height*this.scale; i=i+grid*this.scale){
+    	this.drawLine(this.ctx, -this.canvas.width, i, this.canvas.width+(this.canvas.width*this.scale), i);
+    	if(i!=0)
+    	  this.drawLine(this.ctx, -this.canvas.width, i*-1, this.canvas.width+(this.canvas.width*this.scale), i*-1);
+    }
+  
+    for(i=0; i<=this.canvas.width*this.scale; i=i+grid*this.scale){
+    	this.drawLine(this.ctx, i, -this.canvas.height+(-this.canvas.height*this.scale), i, this.canvas.height+(this.canvas.height*this.scale));
+    	if(i!=0)
+    	  this.drawLine(this.ctx, i*-1, -this.canvas.height+(-this.canvas.height*this.scale), i*-1, this.canvas.height+(this.canvas.height*this.scale));
+    }
+    this.ctx.restore();
   }
-
-  for(i=0; i<=this.canvas.width*grid*this.scale; i=i+grid*this.scale){
-  	this.drawLine(this.ctx, i, -this.canvas.height+(-this.canvas.height*this.scale), i, this.canvas.height+(this.canvas.height*this.scale));
-  	if(i!=0)
-  	  this.drawLine(this.ctx, i*-1, -this.canvas.height+(-this.canvas.height*this.scale), i*-1, this.canvas.height+(this.canvas.height*this.scale));
-  }
-  this.ctx.restore();
-}
 
   //draw
   if($('#render2').is(':checked') || $('#render3').is(':checked')){
