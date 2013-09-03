@@ -603,7 +603,7 @@ Tool.prototype.update = function() {
     this.ctx.lineWidth = 0.1;
     var grid = 5;
     if(this.scale<1)
-    	var grid = 100;
+    	var grid = 250;
     if(this.scale<0.03)
     	var grid = 1500;
     if(this.scale<0.002)
