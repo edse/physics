@@ -18,7 +18,7 @@ function Tool() {
   this.initialState = null;
   this.loadSavedWorlds();
   this.init();
-  //this.update();
+  this.update();
 }
 
 //init function
@@ -158,6 +158,8 @@ Tool.prototype.init = function() {
     this.selectedBody.SetPosition(new b2Vec2(20, 20));
   
   }else{
+    this.center = this.initialState.center;
+    this.scale = this.initialState.scale;
     for(var i=0; i<this.initialState.body.length; i++) {
       console.log(this.initialState.body[i]);
       var body = this.initialState.body[i];
@@ -258,7 +260,7 @@ Tool.prototype.init = function() {
     return false;
   }
   
-  this.update();
+  //this.update();
 
 }//init
 
@@ -941,7 +943,6 @@ Tool.prototype.update = function() {
     
   this.stats.update();
   window.requestAnimFrame(function(){window.tool.update()});
-  //this.update()
 
 }//update
 
@@ -1212,6 +1213,10 @@ Tool.prototype.worldSaveToDisk = function() {
       "x": this.world.m_gravity.x,
       "y": this.world.m_gravity.y }, 
     "allowSleep": this.world.m_allowSleep, 
+    "scale": this.scale, 
+    "center": {
+      "x": this.center.x,
+      "y": this.center.y },
     "body": bodies
   };
   
@@ -1522,3 +1527,5 @@ document.addEventListener("mouseup", function() {
 }, true);
 
 window.addEventListener('keydown', function(e){ tool.doKeyDown(e)}, true);
+
+window.addEventListener('resize', function(e){ tool.canvas.width = window.innerWidth; tool.canvas.height = window.innerHeight; }, false);
