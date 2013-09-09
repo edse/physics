@@ -9,7 +9,7 @@
 
 	<title>HTML5 Physics Engine Editor · 2D physics editor that allows you to create, edit, and interact with 2D bodies in real time</title>
 	<meta name="description" content="2D physics editor that allows you to create, edit, and interact with 2D bodies in real time">
-  <meta name="author" content="Emerson Estrella">
+  <meta name="author" content="Emerson Estrella" href="https://plus.google.com/u/0/106482397345579796333">
 
 	<meta name="viewport" content="width=device-width">
 
@@ -54,7 +54,8 @@
             </div>
             <a id="create-btn" class="btn" href="javascript: tool.createIrregularShape();" style="display: none;">Create body</a>
             <!-- <a id="stop-btn" class="btn btn-danger" href="javascript: tool.creationStop();" style="display: none;">Stop</a> -->
-						<a id="selected_tool" class="btn disabled" href="#">Navigate</a>
+            <!--
+            <a id="selected_tool" class="btn disabled" href="#">Navigate</a>
             <a class="btn btn-primary dropdown-toggle" data-toggle="dropdown" href="#">
               <i class="icon-briefcase icon-white"></i> Tools
               <span class="caret"></span>
@@ -80,6 +81,7 @@
               <li><a href="javascript: tool.worldAwakeAll();"><i class="icon-bell"></i> Awake all objects</a></li>
               <li><a href="javascript: tool.navigate();"><i class="icon-play-circle"></i> Apply Force</a></li>
             </ul>
+            -->
 		      </div>
 
           <div class="nav-collapse">
@@ -93,6 +95,32 @@
 		    </div>
 		  </div>			
 		</div>
+
+  <div id="toolbar" class="alert" style="display:block; background-color: white; border-radius: 5px; position:absolute; top:45px; right:5px; z-index: 2; opacity: 0.97; padding:0px; padding-bottom: 3px;">
+    <!--<button class="close" onclick="$('#world-settings').fadeOut();">×</button>-->
+    <!--<h4>Toolbar</h4>-->
+    <div style="padding:0px; margin:0;">
+      <ul class="nav nav-list">
+        <li class="nav-header">World</li>
+        <li class="active"><a href="javascript: tool.worldSettings();"><i class="icon-cog"></i> Settings</a></li>
+        <li><a href="javascript: tool.worldSave();"><i class="icon-folder-close"></i> Save</a></li>
+        <li><a href="javascript: tool.worldLoad();"><i class="icon-folder-open"></i> Load</a></li>
+        <li class="nav-header">Create</li>
+        <li><a href="javascript: tool.createRect();"><i class="icon-check"></i> Rectangle</a></li>
+        <li><a href="javascript: tool.createCirc();"><i class="icon-ok-circle"></i> Circle</a></li>
+        <li><a href="javascript: tool.createPolygon();"><i class="icon-chevron-down"></i> Polygon</a></li>
+        <li><a href="javascript: tool.createShape();"><i class="icon-chevron-down"></i> Shape</a></li>
+        <li class="nav-header">Edit</li>
+        <li><a href="javascript: tool.selectBody();"><i class="icon-pencil"></i> Body Edit</a></li>
+        <li class="nav-header">Test</li>
+        <li><a href="javascript: tool.navigate();"><i class="icon-play-circle"></i> Apply Force</a></li>
+        <li><a href="javascript: tool.sliceBody();"><i class="icon-pencil"></i> Body Slicer</a></li>
+        <li><a href="javascript: tool.worldAwakeAll();"><i class="icon-bell"></i> Awake Up</a></li>
+        <li class="divider"></li>
+        <li><a href="javascript: tool.navigate();"><i class="icon-question-sign"></i> Help</a></li>
+      </ul>
+    </div>
+  </div>
 
   <div id="world-settings" class="alert" style="display:none; background-color: white; border-radius: 15px; position:absolute; top:45px; left:5px; z-index: 2; opacity: 0.97">
     <button class="close" onclick="$('#world-settings').fadeOut();">×</button>
